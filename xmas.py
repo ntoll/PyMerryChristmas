@@ -173,14 +173,17 @@ class Card(object):
         self.music = os.path.join('data', music)
         self.snowman = os.path.join('data', snowman)
         self.intensity = intensity
+        # the next two variables are flags to indicate the music/snow state
+        self.snowing = True
+        self.playing_music = True
+        # let it snow, let it snow, let it snow... :-)
+        self.let_it_snow(self.intensity)
         # pygame setup
         pygame.init()
         self.size = (size_x, size_y)
         self.window = pygame.display.set_mode(self.size)
         pygame.display.set_caption(caption)
         self.screen = pygame.display.get_surface()
-        # let it snow, let it snow, let it snow... :-)
-        self.let_it_snow(self.intensity)
         # sound setup
         if pygame.mixer:
             freq = 44100 # audio CD quality
@@ -266,6 +269,24 @@ class Card(object):
         for event in events:
             if event.type == QUIT:
                 sys.exit(0)
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_q:
+                    # pressing "Q" quits the card
+                    sys.exit(0)
+                if event.key == pygame.K_m:
+                    # pressing "M" toggles the music
+                    if self.playing_music:
+                        pygame.mixer.music.pause()
+                    else:
+                        pygame.mixer.music.unpause()
+                    self.playing_music = not self.playing_music
+                elif event.key == pygame.K_s:
+                    # pressing "S" toggles the snow
+                    if self.snowing:
+                        self.snow = []
+                    else:
+                        self.let_it_snow(self.intensity)
+                    self.snowing = not self.snowing
 
 
 if __name__ == "__main__":
