@@ -30,6 +30,7 @@ DEALINGS IN THE SOFTWARE.
 import pygame
 import sys
 import os
+import random
 
 # Apparently pygame.locals are commonly used constants to include in the global
 # namespace
@@ -47,26 +48,81 @@ size_x = 800
 size_y = 600
 
 
+class Flake(object):
+    """
+    Represents a circular snowflake (yeah, I know)
+
+    Based upon code found here: http://www.tolchz.net/?p=29
+    """
+
+    def __init__(self):
+        """
+        Set up a whole load of attributes about the snowflake
+        """
+        # start x position
+        self.x = random.randrange(size_x)
+        # start y position
+        self.y = - random.randrange(100)
+        # drift x (amount of change each loop along the x axis)
+        self.dx = random.randrange(3) - random.randrange(6)
+        # drift y (amount of change each loop along the y axis)
+        self.dy = random.randrange(1, 20) + random.randrange(4)
+        # the size of the circular snowflake
+        self.size = random.randrange(1, 4)
+        # the colour of the snowflake (from sludgy grey to snowy white)
+        c = random.randrange(200, 256)
+        self.color = [c, c, c]
+
+    def draw(self, screen):
+        """
+        Create a circular representation of the snowflake on the screen
+        """
+        # Snow is circular in this case... ;-)
+        pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)),
+            self.size)
+        # now update things for the next loop
+        # update the x position
+        self.x += self.dx
+        # update the y position
+        self.y += self.dy
+        # bounds checking
+        if self.x < 0 or self.x > size_x:
+            # floated off the edge of the screen so do a reset
+            self.x = random.randrange(size_x)
+            self.y = 0
+            self.dy = random.randrange(1, 30) + random.random()
+        if (self.y > size_y):
+            # floated off the bottom of the screen so drift again from the top
+            self.x = random.randrange(size_x)
+            self.y = 0
+            self.dy = random.randrange(1, 30) + random.random()
+
+
 class Card(object):
     """
     Represents an interactive Christmas card, handles the main Pygame loop and
     provides various utility methods
     """
 
-    def __init__(self, caption='Merry Christmas', background='snow.jpg'):
+    def __init__(self, caption='Merry Christmas', background='snow.jpg',
+        intensity=100):
         """
         Caption - game caption
         background - background image
+        intensity - the number of snowflakes to display
         """
         # initialise various instance variables
         self.caption = caption
         self.background = os.path.join('data', background)
+        self.intensity = intensity
         # pygame setup
         pygame.init()
         self.size = (size_x, size_y)
         self.window = pygame.display.set_mode(self.size)
         pygame.display.set_caption(caption)
         self.screen = pygame.display.get_surface()
+        # let it snow, let it snow, let it snow... :-)
+        self.let_it_snow(self.intensity)
 
     def display_card(self):
         """
@@ -94,6 +150,17 @@ class Card(object):
         self.screen.blit(bg_image, (0, 0))
         # update the greeting
         self.draw_greeting()
+        # draw some snow
+        for s in self.snow:
+            s.draw(self.screen)
+
+    def let_it_snow(self, intensity=100):
+        """
+        Initialises a snowstorm
+        """
+        self.snow = []
+        for i in range(intensity):
+            self.snow.append(Flake())
 
     def draw_greeting(self):
         """
