@@ -40,6 +40,8 @@ from pygame.locals import *
 # Just so people know...
 if not pygame.font:
     print 'Warning, fonts disabled'
+if not pygame.mixer:
+    print 'Warning, sound disabled'
 
 
 # Width of the card's window
@@ -157,16 +159,18 @@ class Card(object):
     """
 
     def __init__(self, caption='Merry Christmas', background='snow.jpg',
-        snowman='snowman.png', intensity=100):
+        music='silent_night.mp3', snowman='snowman.png', intensity=100):
         """
         Caption - game caption
         background - background image
+        music - mp3 file to play ad nauseum
         snowman - the image to use for the snowman sprite
         intensity - the number of snowflakes to display
         """
         # initialise various instance variables
         self.caption = caption
         self.background = os.path.join('data', background)
+        self.music = os.path.join('data', music)
         self.snowman = os.path.join('data', snowman)
         self.intensity = intensity
         # pygame setup
@@ -177,6 +181,17 @@ class Card(object):
         self.screen = pygame.display.get_surface()
         # let it snow, let it snow, let it snow... :-)
         self.let_it_snow(self.intensity)
+        # sound setup
+        if pygame.mixer:
+            freq = 44100 # audio CD quality
+            bitsize = -16 # unsigned 16 bit
+            channels = 2 # 1 is mono, 2 is stereo
+            buffer_size = 1024 # number of samples
+            # initialise
+            pygame.mixer.init(freq, bitsize, channels, buffer_size)
+            # set volume from 0 -> 1.0
+            pygame.mixer.music.set_volume(0.8)
+            pygame.mixer.music.load(self.music)
 
     def display_card(self):
         """
@@ -192,6 +207,8 @@ class Card(object):
         allsprites = pygame.sprite.RenderPlain((frosty,))
         allsprites.update()
         clock = pygame.time.Clock()
+        # play the music
+        pygame.mixer.music.play(-1)
         # main game loop
         while True:
             # update the state of the various game "assets" in this loop
