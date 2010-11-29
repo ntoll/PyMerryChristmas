@@ -98,6 +98,58 @@ class Flake(object):
             self.dy = random.randrange(1, 30) + random.random()
 
 
+class Snowman(pygame.sprite.Sprite):
+    """
+    A friendly snowman that skates along the bottom of the screen
+    """
+
+    def __init__(self, image, screen):
+        # __init__ in parent class to
+        pygame.sprite.Sprite.__init__(self)
+        # load the image file for this sprite
+        self.image, self.rect = self.load_image(image, -1)
+        # get the area of the screen so we can detect when the sprite gets to
+        # the edge
+        self.area = screen.get_rect()
+        # starting position
+        self.rect.topleft = 10, 300 # x, y
+        # the number of pixels to move each loop
+        self.move = 5
+
+    def update(self):
+        """
+        Make the snowman move from side to side
+        """
+        # get the new position of the snowman
+        newpos = self.rect.move((self.move, 0))
+        # handle getting to the edges
+        if (self.rect.left < self.area.left or
+            self.rect.right > self.area.right):
+            # move in the opposite direction
+            self.move = -self.move
+            # get the new position
+            newpos = self.rect.move((self.move, 0))
+            # mirror the image (flip it)
+            self.image = pygame.transform.flip(self.image, 1, 0)
+        self.rect = newpos
+
+    def load_image(self, name, colorkey=None):
+        """
+        Loads an image for use as a sprite
+        """
+        try:
+            image = pygame.image.load(name)
+        except pygame.error, message:
+            print 'Cannot load image: %s' % name
+            raise SystemExit(message)
+        image = image.convert()
+        if colorkey is not None:
+            if colorkey is -1:
+                colorkey = image.get_at((0, 0))
+            image.set_colorkey(colorkey, RLEACCEL)
+        return image, image.get_rect()
+
+
 class Card(object):
     """
     Represents an interactive Christmas card, handles the main Pygame loop and
@@ -105,15 +157,17 @@ class Card(object):
     """
 
     def __init__(self, caption='Merry Christmas', background='snow.jpg',
-        intensity=100):
+        snowman='snowman.png', intensity=100):
         """
         Caption - game caption
         background - background image
+        snowman - the image to use for the snowman sprite
         intensity - the number of snowflakes to display
         """
         # initialise various instance variables
         self.caption = caption
         self.background = os.path.join('data', background)
+        self.snowman = os.path.join('data', snowman)
         self.intensity = intensity
         # pygame setup
         pygame.init()
@@ -133,23 +187,33 @@ class Card(object):
         pygame.display.flip()
         # draw the greeting
         self.draw_greeting()
+        # draw the snowman
+        frosty = Snowman(self.snowman, self.screen)
+        allsprites = pygame.sprite.RenderPlain((frosty,))
+        allsprites.update()
+        clock = pygame.time.Clock()
         # main game loop
         while True:
             # update the state of the various game "assets" in this loop
-            self.update_state(bg_image)
+            self.update_state(clock, bg_image, allsprites)
             # handle any input from the user
             self.handle_input(pygame.event.get())
             # display the result
             pygame.display.flip()
 
-    def update_state(self, bg_image):
+    def update_state(self, clock, bg_image, allsprites):
         """
         Updates the states of the various game "assets" for a loop
         """
+        # ensure we don't get more than 60fps
+        clock.tick(60)
         # update the background
         self.screen.blit(bg_image, (0, 0))
         # update the greeting
         self.draw_greeting()
+        # update the sprite(s)
+        allsprites.update()
+        allsprites.draw(self.screen)
         # draw some snow
         for s in self.snow:
             s.draw(self.screen)
