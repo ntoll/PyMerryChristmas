@@ -36,6 +36,11 @@ import os
 from pygame.locals import *
 
 
+# Just so people know...
+if not pygame.font:
+    print 'Warning, fonts disabled'
+
+
 # Width of the card's window
 size_x = 800
 # Height of the card's window
@@ -70,6 +75,8 @@ class Card(object):
         # draw the background
         bg_image = pygame.image.load(self.background)
         pygame.display.flip()
+        # draw the greeting
+        self.draw_greeting()
         # main game loop
         while True:
             # update the state of the various game "assets" in this loop
@@ -85,6 +92,24 @@ class Card(object):
         """
         # update the background
         self.screen.blit(bg_image, (0, 0))
+        # update the greeting
+        self.draw_greeting()
+
+    def draw_greeting(self):
+        """
+        Draw the greeting onto the screen
+        """
+        if pygame.font:
+            # grab the correct font
+            font = pygame.font.Font(None, 120) # fontname, size
+            # render the font into the "text" surface
+            # text, antialias, color
+            text = font.render(self.caption, 1, (200, 50, 100))
+            # center the text
+            textpos = text.get_rect()
+            textpos.centerx = self.screen.get_rect().centerx
+            # render to screen
+            self.screen.blit(text, textpos)
 
     def handle_input(self, events):
         """
