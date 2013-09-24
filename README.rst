@@ -3,6 +3,8 @@ Pygame Christmas
 
 This little project displays an interactive Christmas card written in Python using the Pygame (http://pygame.org) library.
 
+HINT: You need to have PyGame installed (see their website for details). If you're on a Debian based system: ``sudo apt-get install python-pygame`` should do the trick. ;-)
+
 Usage
 -----
 
